@@ -1,0 +1,7 @@
+﻿  Using triplet "x86-windows" from "D:\workspace\gflags\vcpkg\installed\x86-windows\"
+  main.cpp
+  The contents of <optional> are available only with C++17 or later.
+  tello.cpp
+  The contents of <optional> are available only with C++17 or later.
+  Generating Code...
+  DroneEngine.Tello.vcxproj -> D:\workspace\DroneEngine_c\DroneEngine.Tello\Debug\DroneEngine.Tello.exe
