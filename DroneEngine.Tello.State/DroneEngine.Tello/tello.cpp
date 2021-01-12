@@ -9,8 +9,8 @@
 #pragma comment (lib, "ws2_32.lib")
 
 Tello::Tello() {
-	m_command_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	m_state_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	
+	
 }
 
 Tello::~Tello() {
@@ -40,7 +40,7 @@ bool Tello::Bind(int local_client_command_port) {
 	//start up winsock
 	int result = initializeWinSocket();
 
-	auto bind_result = BindSocketToPort(m_command_sockfd, local_client_command_port);
+	auto bind_result = BindCommandSocketToPort(); //m_command_sockfd, local_client_command_port
 	if (!bind_result.first) {
 		std::cout << bind_result.second << std::endl;
 		return false;
@@ -54,7 +54,7 @@ bool Tello::Bind(int local_client_command_port) {
 		return false;
 	}
 
-	bind_result = BindSocketToPort(m_state_sockfd, LOCAL_SERVER_STATE_PORT);
+	bind_result = BindStatusSocketToPort(); //m_state_sockfd, LOCAL_SERVER_STATE_PORT
 	if (!bind_result.first) {
 		std::cout << bind_result.second << std::endl;
 		return false;
@@ -66,10 +66,10 @@ bool Tello::Bind(int local_client_command_port) {
 	
 	std::vector<std::string> listOfCommand = { "sn?", "sdk?", "wifi?", "battery?" };
 
-	for (size_t i = 0; i < listOfCommand.size(); i++)
+	/*for (size_t i = 0; i < listOfCommand.size(); i++)
 	{
 		ShowTelloInfo(listOfCommand[i]);
-	}
+	}*/
 
 	return true;
 }
@@ -136,15 +136,34 @@ std::string Tello::GetState() {
 	return response;
 }
 
-std::pair<bool, std::string> Tello::BindSocketToPort(const SOCKET socketIn, const int port) {
+std::pair<bool, std::string> Tello::BindStatusSocketToPort() {
+
+	m_state_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	sockaddr_in listen_addr{ };
-	listen_addr.sin_port = htons(port);
-	listen_addr.sin_addr.S_un.S_addr = INADDR_ANY;
+	listen_addr.sin_port = htons(9000);
+	listen_addr.sin_addr.S_un.S_addr = ADDR_ANY;
 	listen_addr.sin_family = AF_INET;
-	int result = bind(socketIn, (sockaddr*)&listen_addr, sizeof(listen_addr));
+	int result = bind(m_state_sockfd, (sockaddr*)&listen_addr, sizeof(listen_addr));
 
 	if (result == SOCKET_ERROR) {
-		std::cout << "cannot bind socket" << WSAGetLastError() << std::endl;
+		std::cout << "cannot bind socket " << WSAGetLastError() << std::endl;
+		return { false, "cannot bind socket" };
+	}
+
+	return { true, "" };
+}
+
+std::pair<bool, std::string> Tello::BindCommandSocketToPort() {
+
+	m_command_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockaddr_in listen_addr{ };
+	listen_addr.sin_port = htons(8890);
+	listen_addr.sin_addr.S_un.S_addr = ADDR_ANY;
+	listen_addr.sin_family = AF_INET;
+	int result = bind(m_command_sockfd, (sockaddr*)&listen_addr, sizeof(listen_addr));
+
+	if (result == SOCKET_ERROR) {
+		std::cout << "cannot bind socket " << WSAGetLastError() << std::endl;
 		return { false, "cannot bind socket" };
 	}
 

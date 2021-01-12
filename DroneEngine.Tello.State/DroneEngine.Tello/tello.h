@@ -34,7 +34,8 @@ private:
 
 	void FindTello();
 	void ShowTelloInfo(std::string& command);
-	std::pair<bool, std::string> BindSocketToPort(const SOCKET sockfd, const int port);
+	std::pair<bool, std::string> BindStatusSocketToPort(); //const SOCKET sockfd, const int port
+	std::pair<bool, std::string> BindCommandSocketToPort();
 	std::pair<bool, std::string> FindSocketAddr(const char* const ip, 
 		const char* const port, sockaddr_storage* const addr);
 	std::pair<int, std::string> ReceiveFrom(const SOCKET sockfd,
