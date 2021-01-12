@@ -17,6 +17,8 @@ Tello::~Tello() {
 	std::cout << "closing sockets ....";
 	closesocket(m_command_sockfd);
 	closesocket(m_state_sockfd);
+
+	WSACleanup();
 }
 
 int Tello::initializeWinSocket() {
