@@ -14,29 +14,47 @@ Tello::Tello() {
 }
 
 Tello::~Tello() {
+	std::cout << "closing sockets ....";
 	closesocket(m_command_sockfd);
 	closesocket(m_state_sockfd);
 }
 
+int Tello::initializeWinSocket() {
+	WSADATA data;
+	WORD version = MAKEWORD(2, 2);
+
+	int wsOK = WSAStartup(version, &data);
+
+	if (wsOK != 0) {
+		std::cout << "cannot start Winsock" << wsOK;
+		return -1;
+	}
+
+	return 1;
+}
+
 bool Tello::Bind(int local_client_command_port) {
 
-	auto socket_result = BindSocketToPort(m_command_sockfd, local_client_command_port);
-	if (!socket_result.first) {
-		std::cout << socket_result.second << std::endl;
+	//start up winsock
+	int result = initializeWinSocket();
+
+	auto bind_result = BindSocketToPort(m_command_sockfd, local_client_command_port);
+	if (!bind_result.first) {
+		std::cout << bind_result.second << std::endl;
 		return false;
 	}
 
 	m_local_client_command_port = local_client_command_port;
 
-	auto result_findSocket = FindSocketAddr(TELLO_SERVER_IP, TELLO_SERVER_COMMAND_PORT, &m_tello_server_command_addr);
-	if (!result_findSocket.first) {
-		std::cout << result_findSocket.second << std::endl;
+	bind_result = FindSocketAddr(TELLO_SERVER_IP, TELLO_SERVER_COMMAND_PORT, &m_tello_server_command_addr);
+	if (!bind_result.first) {
+		std::cout << bind_result.second << std::endl;
 		return false;
 	}
 
-	auto result_localSrvr = BindSocketToPort(m_state_sockfd, LOCAL_SERVER_STATE_PORT);
-	if (!result_localSrvr.first) {
-		std::cout << result_localSrvr.second << std::endl;
+	bind_result = BindSocketToPort(m_state_sockfd, LOCAL_SERVER_STATE_PORT);
+	if (!bind_result.first) {
+		std::cout << bind_result.second << std::endl;
 		return false;
 	}
 
@@ -116,7 +134,7 @@ std::string Tello::GetState() {
 	return response;
 }
 
-std::pair<bool, std::string> Tello::BindSocketToPort(const int socketIn, const int port) {
+std::pair<bool, std::string> Tello::BindSocketToPort(const SOCKET socketIn, const int port) {
 	sockaddr_in listen_addr{ };
 	listen_addr.sin_port = htons(port);
 	listen_addr.sin_addr.S_un.S_addr = INADDR_ANY;
@@ -167,7 +185,7 @@ void Tello::ShowTelloInfo(std::string& command) {
 	}
 }
 
-std::pair<int, std::string> Tello::ReceiveFrom(const int sockfd, 
+std::pair<int, std::string> Tello::ReceiveFrom(const SOCKET sockfd,
 	sockaddr_storage& addr,
 	std::vector<char>& buffer,
 	const int buffer_size) {
