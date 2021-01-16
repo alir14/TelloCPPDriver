@@ -64,7 +64,7 @@ bool Tello::Bind(int local_client_command_port) {
 	FindTello();
 	std::cout << "Entered SDK mode ..." << std::endl;
 	
-	std::vector<std::string> listOfCommand = { "sn?", "sdk?", "wifi?", "battery?" };
+	// std::vector<std::string> listOfCommand = { "sn?", "sdk?", "wifi?", "battery?" };
 
 	/*for (size_t i = 0; i < listOfCommand.size(); i++)
 	{
@@ -94,7 +94,7 @@ bool Tello::SendCommand(const std::string& command) {
 }
 
 std::pair<bool, std::string> Tello::ReceiveResponse() {
-	const int size{ 32 };
+	const int size{ 1024 };
 	std::vector<char> buffer(size, '\0');
 	const auto result = ReceiveFrom(m_command_sockfd, m_tello_server_command_addr, buffer, size);
 
@@ -211,15 +211,35 @@ std::pair<int, std::string> Tello::ReceiveFrom(const SOCKET sockfd,
 	std::vector<char>& buffer,
 	const int buffer_size) {
 
-	socklen_t addr_len{ sizeof(addr) };
+	/*socklen_t addr_len{ sizeof(addr) };
 	buffer.resize(buffer_size, '\0');
 	
-	int result = recvfrom(sockfd, buffer.data(), buffer_size, 0, (sockaddr*)&addr, &addr_len);
+	int result = recvfrom(sockfd, buffer.data(), buffer_size, 0, (sockaddr*)&addr, &addr_len);*/
 
-	if (result == -1) {
-		std::cout << "recfrom: " << errno << std::endl;
-		return { -1 , "failed to receive message" };
+	sockaddr_in client;
+	int clientSize = sizeof(client);
+	ZeroMemory(&client, clientSize);
+
+	char buf[1024];
+
+	ZeroMemory(buf, 1024);
+	while (true)
+	{
+		int byteIn = recvfrom(sockfd, buf, 1024, 0, (sockaddr*)&client, &clientSize);
+
+		if (byteIn == SOCKET_ERROR) {
+			std::cout << "recfrom: " << errno << std::endl;
+			return { -1 , "failed to receive message" };
+		}
+
+		std::cout << "msg received: " << buf << std::endl;
+
+		std::string resultMsg(buf);
+
+		if(byteIn > 1)
+			return { byteIn, resultMsg };
 	}
+	
 
-	return { result, "" };
+	
 }
