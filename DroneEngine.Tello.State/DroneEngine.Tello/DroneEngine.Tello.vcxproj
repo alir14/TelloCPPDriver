@@ -140,14 +140,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DroneEngine.Tello.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tello.cpp" />
-    <ClCompile Include="tello_state.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tello.h" />
-    <ClInclude Include="tello_state.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

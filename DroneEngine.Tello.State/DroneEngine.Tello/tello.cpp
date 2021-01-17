@@ -1,5 +1,4 @@
 #include "tello.h"
-#include<iostream>
 #include <errno.h>
 #include <memory.h>
 #include <stdlib.h>
@@ -120,7 +119,7 @@ std::string Tello::GetState() {
 	{
 		ZeroMemory(buff, 1024);
 
-		int bytesIn = recvfrom(m_state_sockfd, buff, 1024, (sockaddr*)&client, &clientLength);
+		int bytesIn = recvfrom(m_state_sockfd, buff, 1024, 0, (sockaddr*)&client, &clientLength);
 
 		if (bytesIn == SOCKET_ERROR) {
 			std::cout << "error receiving from client " << WSAGetLastError() << std::endl;
@@ -133,15 +132,16 @@ std::string Tello::GetState() {
 		inet_ntop(AF_INET, &client.sin_addr, clientIp, 256);
 
 		std::cout << "drone: " << clientIp << "state :" << buff << std::endl;
+
+		ShowStatus(buff);
 	}
-	
 }
 
 std::pair<bool, std::string> Tello::BindStatusSocketToPort() {
 
 	m_state_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	sockaddr_in listen_addr{ };
-	listen_addr.sin_port = htons(9000);
+	listen_addr.sin_port = htons(LOCAL_SERVER_STATE_PORT);
 	listen_addr.sin_addr.S_un.S_addr = ADDR_ANY;
 	listen_addr.sin_family = AF_INET;
 	int result = bind(m_state_sockfd, (sockaddr*)&listen_addr, sizeof(listen_addr));
@@ -158,7 +158,7 @@ std::pair<bool, std::string> Tello::BindCommandSocketToPort() {
 
 	m_command_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	sockaddr_in listen_addr{ };
-	listen_addr.sin_port = htons(8890);
+	listen_addr.sin_port = htons(LOCAL_CLIENT_COMMAND_PORT);
 	listen_addr.sin_addr.S_un.S_addr = ADDR_ANY;
 	listen_addr.sin_family = AF_INET;
 	int result = bind(m_command_sockfd, (sockaddr*)&listen_addr, sizeof(listen_addr));
@@ -221,5 +221,32 @@ std::pair<int, std::string> Tello::ReceiveFrom(const SOCKET sockfd) {
 
 		if(byteIn > 1)
 			return { byteIn, resultMsg };
+	}
+}
+
+void Tello::ShowStatus(const std::string& state) {
+	try
+	{
+		system("clear");
+
+		int begin{ 0 };
+		std::cout << "+-----------+-----------+" << std::endl;
+		const int padding{ 10 };
+		while (begin < state.size())
+		{
+			const auto split{ state.find(':', begin) };
+			const auto name{ state.substr(begin, split - begin) };
+			const auto end{ state.find(';', split) };
+			const auto value{ state.substr(split + 1, end - split - 1) };
+
+			begin = end + 1;
+
+			std::cout << name << " : " << value << std::endl;
+
+		}
+		std::cout << "+-----------+-----------+" << std::endl;
+	}
+	catch (const std::exception& e) {
+		std::cout << e.what();
 	}
 }

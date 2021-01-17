@@ -1,5 +1,4 @@
 #include "tello.h"
-#include "tello_state.h"
 
 int main() {
 	std::cout << "connecting to drone !\n";
@@ -16,11 +15,11 @@ int main() {
 		return 0;
 	}
 
-	while (true)
-	{
-		const auto state = tello.GetState();
-		//if (state.size() > 0) {
-		//	telloState.ShowStatus(state);
-		//}
-	}
+	const auto state = tello.GetState();
+	//while (true)
+	//{
+	//	if (state.size() > 0) {
+	//		telloState.ShowStatus(state);
+	//	}
+	//}
 }
