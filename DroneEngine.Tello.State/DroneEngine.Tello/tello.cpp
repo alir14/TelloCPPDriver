@@ -9,8 +9,8 @@
 #pragma comment (lib, "ws2_32.lib")
 
 Tello::Tello() {
-	
-	
+	//start up winsock
+	int result = initializeWinSocket();
 }
 
 Tello::~Tello() {
@@ -35,26 +35,14 @@ int Tello::initializeWinSocket() {
 	return 1;
 }
 
-bool Tello::Bind(int local_client_command_port) {
-
-	//start up winsock
-	int result = initializeWinSocket();
-
-	auto bind_result = BindCommandSocketToPort(); //m_command_sockfd, local_client_command_port
+bool Tello::BindCommand() {
+	auto bind_result = BindCommandSocketToPort(); 
 	if (!bind_result.first) {
 		std::cout << bind_result.second << std::endl;
 		return false;
 	}
-
-	m_local_client_command_port = local_client_command_port;
 
 	bind_result = FindSocketAddr(TELLO_SERVER_IP, TELLO_SERVER_COMMAND_PORT, &m_tello_server_command_addr);
-	if (!bind_result.first) {
-		std::cout << bind_result.second << std::endl;
-		return false;
-	}
-
-	bind_result = BindStatusSocketToPort(); //m_state_sockfd, LOCAL_SERVER_STATE_PORT
 	if (!bind_result.first) {
 		std::cout << bind_result.second << std::endl;
 		return false;
@@ -63,15 +51,9 @@ bool Tello::Bind(int local_client_command_port) {
 	std::cout << "Finding Tello ..." << std::endl;
 	FindTello();
 	std::cout << "Entered SDK mode ..." << std::endl;
-	
-	// std::vector<std::string> listOfCommand = { "sn?", "sdk?", "wifi?", "battery?" };
-
-	/*for (size_t i = 0; i < listOfCommand.size(); i++)
-	{
-		ShowTelloInfo(listOfCommand[i]);
-	}*/
 
 	return true;
+
 }
 
 bool Tello::SendCommand(const std::string& command) {
@@ -87,16 +69,16 @@ bool Tello::SendCommand(const std::string& command) {
 		return false;
 	}
 
-	std::cout << "127.0.0.1:" << m_local_client_command_port << " >>>> "
+	std::cout << "127.0.0.1:" << "????" << " >>>> "
 		<< bytes << " bytes >>>> " << TELLO_SERVER_IP << ":" << TELLO_SERVER_COMMAND_PORT << ":" << command;
 
 	return true;
 }
 
-std::pair<bool, std::string> Tello::ReceiveResponse() {
+std::pair<bool, std::string> Tello::ReceiveCommandResponse() {
 	const int size{ 1024 };
 	std::vector<char> buffer(size, '\0');
-	const auto result = ReceiveFrom(m_command_sockfd, m_tello_server_command_addr, buffer, size);
+	const auto result = ReceiveFrom(m_command_sockfd);
 
 	const int bytes{ result.first };
 
@@ -107,33 +89,52 @@ std::pair<bool, std::string> Tello::ReceiveResponse() {
 	std::string response{ buffer.cbegin(), buffer.cbegin() + bytes };
 	response.erase(response.find_last_not_of(" \n\r\t") + 1);
 
-	std::cout << "127.0.0.1: " << m_local_client_command_port << " <<<< " << bytes <<
+	std::cout << "127.0.0.1: " << "??????" << " <<<< " << bytes <<
 		" bytes " << "<<<< " << TELLO_SERVER_IP <<":" << TELLO_SERVER_COMMAND_PORT << 
 		" " << response << std::endl;
 
 	return { true, "" };
 }
 
-std::string Tello::GetState() {
-	sockaddr_storage addr;
-	const int size{ 1024 };
-	std::vector<char> buffer(size, '\0');
-	const auto result = ReceiveFrom(m_state_sockfd, addr, buffer, size);
-	const int bytes{ result.first };
-	if (bytes < 1) {
-		std::cout << "cannot get any status" << std::endl;
-		return "";
+bool Tello::BindState() {
+	auto bind_result = BindStatusSocketToPort();
+
+	if (!bind_result.first) {
+		std::cout << bind_result.second << std::endl;
+		return false;
 	}
 
-	std::string response{ std::cbegin(buffer), std::cend(buffer) + bytes };
-	//remove whitespace
-	response.erase(response.find_last_not_of(" \n\r\t"));
+	return true;
 
-	std::cout << "127.0.0.1: " << m_local_client_command_port << " <<<< " << bytes <<
-		" bytes " << "<<<< " << TELLO_SERVER_IP << ":" << TELLO_SERVER_COMMAND_PORT <<
-		" " << response << std::endl;
+}
 
-	return response;
+std::string Tello::GetState() {
+
+	sockaddr_in client;
+	int clientLength = sizeof(client);
+	ZeroMemory(&client, clientLength);
+
+	char buff[1024];
+
+	while (true)
+	{
+		ZeroMemory(buff, 1024);
+
+		int bytesIn = recvfrom(m_state_sockfd, buff, 1024, (sockaddr*)&client, &clientLength);
+
+		if (bytesIn == SOCKET_ERROR) {
+			std::cout << "error receiving from client " << WSAGetLastError() << std::endl;
+			continue;
+		}
+
+		char clientIp[256];
+		ZeroMemory(clientIp, 256);
+
+		inet_ntop(AF_INET, &client.sin_addr, clientIp, 256);
+
+		std::cout << "drone: " << clientIp << "state :" << buff << std::endl;
+	}
+	
 }
 
 std::pair<bool, std::string> Tello::BindStatusSocketToPort() {
@@ -193,28 +194,10 @@ void Tello::FindTello() {
 	do {
 		SendCommand("command");
 		Sleep(1);
-	} while ((!ReceiveResponse().first));
+	} while ((!ReceiveCommandResponse().first));
 }
 
-void Tello::ShowTelloInfo(std::string& command) {
-	std::pair<bool, std::string> resposnse;
-
-	SendCommand(command);
-	resposnse = ReceiveResponse();
-	if (resposnse.first) {
-		std::cout << command << " = " << resposnse.second << std::endl;
-	}
-}
-
-std::pair<int, std::string> Tello::ReceiveFrom(const SOCKET sockfd,
-	sockaddr_storage& addr,
-	std::vector<char>& buffer,
-	const int buffer_size) {
-
-	/*socklen_t addr_len{ sizeof(addr) };
-	buffer.resize(buffer_size, '\0');
-	
-	int result = recvfrom(sockfd, buffer.data(), buffer_size, 0, (sockaddr*)&addr, &addr_len);*/
+std::pair<int, std::string> Tello::ReceiveFrom(const SOCKET sockfd) {
 
 	sockaddr_in client;
 	int clientSize = sizeof(client);
@@ -239,7 +222,4 @@ std::pair<int, std::string> Tello::ReceiveFrom(const SOCKET sockfd,
 		if(byteIn > 1)
 			return { byteIn, resultMsg };
 	}
-	
-
-	
 }
