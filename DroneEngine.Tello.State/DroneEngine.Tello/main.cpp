@@ -1,6 +1,8 @@
 #include "tello.h"
 
 int main() {
+	int inputChar = 0;
+
 	std::cout << "connecting to drone !\n";
 
 	Tello tello;
@@ -15,6 +17,17 @@ int main() {
 		return 0;
 	}
 
-	const auto state = tello.GetState();
+	puts("enter 1 to see the dron status, z will exit.");
+
+	do {
+
+		inputChar = getchar();
+
+		if (inputChar == '1')
+		{
+			const auto state = tello.GetState();
+		}
+
+	} while (inputChar != 'z');
 	
 }
