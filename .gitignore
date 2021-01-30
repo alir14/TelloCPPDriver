@@ -3,3 +3,10 @@
 ################################################################################
 
 /DroneEngine.Tello.State/.vs/DroneEngine.Tello/v16
+/DroneEngine.Tello.State/Debug
+/DroneEngine.Tello.State/DroneEngine.Tello/Debug
+/DroneEngine.Tello.Command/.vs/DroneEngine.Tello.Command/v16
+/DroneEngine.Tello.Command/Debug
+/DroneEngine.Tello.Command/DroneEngine.Tello.Command/Debug
+/DroneEngine.Tello.Command/DroneEngine.Tello.Command/DroneEngine.Tello.Command.vcxproj.filters
+/DroneEngine.Tello.Command/DroneEngine.Tello.Command/DroneEngine.Tello.Command.vcxproj.user

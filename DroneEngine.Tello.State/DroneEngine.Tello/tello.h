@@ -1,7 +1,6 @@
 #pragma once
 #include <WS2tcpip.h>
 #include <sys/types.h>
-#include <optional>
 #include <vector>
 #include <string>
 #include<iostream>
@@ -20,10 +19,9 @@ public:
 	Tello();
 	~Tello();
 	int initializeWinSocket();
-	bool BindCommand();
-	bool BindState();
+	bool BindCommandSocket();
+	bool BindStateSocket();
 	bool SendCommand(const std::string& command);
-	std::pair<bool,std::string> ReceiveCommandResponse();
 	std::string GetState();
 	Tello(const Tello&) = delete;
 	Tello(const Tello&&) = delete;
@@ -32,14 +30,12 @@ private:
 	SOCKET m_command_sockfd;
 	SOCKET  m_state_sockfd;
 	sockaddr_storage m_tello_server_command_addr{};
-	sockaddr_storage m_tello_server_state_addr{};
 
-	void FindTello();
+	void ConnectToTello();
 	std::pair<bool, std::string> BindStatusSocketToPort();
 	std::pair<bool, std::string> BindCommandSocketToPort();
-	std::pair<bool, std::string> FindSocketAddr(const char* const ip, 
-		const char* const port, sockaddr_storage* const addr);
-	std::pair<int, std::string> ReceiveFrom(const SOCKET sockfd);
+	std::pair<bool, std::string> GetSocketAddr();
+	std::pair<bool, std::string> ReceiveCommandResponse();
 	void ShowStatus(const std::string& state);
 
 };

@@ -5,21 +5,16 @@ int main() {
 
 	Tello tello;
 
-	if (!tello.BindCommand()) {
+	if (!tello.BindCommandSocket()) {
 		std::cout << "failed to connect and send command!\n";
 		return 0;
 	}
 
-	if (!tello.BindState()) {
+	if (!tello.BindStateSocket()) {
 		std::cout << "failed to connect to get state!\n";
 		return 0;
 	}
 
 	const auto state = tello.GetState();
-	//while (true)
-	//{
-	//	if (state.size() > 0) {
-	//		telloState.ShowStatus(state);
-	//	}
-	//}
+	
 }
