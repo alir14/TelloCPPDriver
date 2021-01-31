@@ -1,6 +1,5 @@
 #pragma once
 #include <WS2tcpip.h>
-#include <sys/types.h>
 #include <vector>
 #include <string>
 #include<iostream>
@@ -11,15 +10,15 @@
 const char* const TELLO_SERVER_IP = "192.168.10.1";
 const char* const TELLO_SERVER_COMMAND_PORT = "8889";
 
-const int LOCAL_CLIENT_COMMAND_PORT = 8889;
+const int CLIENT_COMMAND_PORT = 8889;
 
 class Tello
 {
 public:
 	Tello();
 	~Tello();
-	int initializeWinSocket();
-	bool BinCommandSocket();
+	void initializeWinSocket();
+	bool BindAndConnect();
 	bool SendCommand(const std::string& command);
 	std::pair<bool, std::string> ReceiveResponse();
 	
@@ -27,7 +26,8 @@ private:
 	SOCKET command_socket;
 	sockaddr_storage server_command_addr;
 
-	void ConnectToTello();
-	std::pair<bool, std::string> FindSocketAddr(const char* const ip, const char* const port, sockaddr_storage* const addr);
+	std::pair<bool, std::string> BindSocket();
+	std::pair<bool, std::string> GetSocketAddr();
+	void SetTelloToCommandMode();
 };
 

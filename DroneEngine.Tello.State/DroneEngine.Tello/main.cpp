@@ -7,7 +7,7 @@ int main() {
 
 	Tello tello;
 
-	if (!tello.BindCommandSocket()) {
+	if (!tello.BindSocketAndConnect()) {
 		std::cout << "failed to connect and send command!\n";
 		return 0;
 	}
