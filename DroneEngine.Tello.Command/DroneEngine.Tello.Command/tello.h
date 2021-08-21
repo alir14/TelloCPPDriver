@@ -7,7 +7,7 @@
 #pragma comment(lib, "ws2_32.lib")
 
 
-const char* const TELLO_SERVER_IP = "192.168.10.1";
+const char* const TELLO_SERVER_IP = "192.168.10.1";//"192.168.10.1"; "192.168.1.67";
 const char* const TELLO_SERVER_COMMAND_PORT = "8889";
 
 const int CLIENT_COMMAND_PORT = 8889;

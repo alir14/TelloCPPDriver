@@ -70,6 +70,8 @@ std::pair<bool, std::string> Tello::BindSocket() {
 std::pair<bool, std::string> Tello::GetSocketAddr() {
 	addrinfo* result_list = nullptr;
 	addrinfo hints;
+	
+	memset(&hints, 0, sizeof(hints));
 
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_DGRAM;
@@ -109,7 +111,7 @@ bool Tello::SendCommand(const std::string& command) {
 	}
 
 	std::cout << "127.0.0.1:" << " >>>> "
-		<< result << " bytes >>>> " << TELLO_SERVER_IP << ":" << TELLO_SERVER_COMMAND_PORT << ":" << command;
+		<< result << " bytes >>>> " << TELLO_SERVER_IP << ":" << TELLO_SERVER_COMMAND_PORT << ":" << command << std::endl;
 
 	Sleep(1);
 
